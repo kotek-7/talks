@@ -3,7 +3,9 @@
   "module": "index.ts",
   "private": true,
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "build": "tsx ./scripts/buildAll.ts"
+  },
   "workspaces": [
     "packages/*"
   ],
