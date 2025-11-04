@@ -24,9 +24,9 @@ mdc: true
 duration: 35min
 ---
 
-# Welcome to Slidev
+# オブジェクト指向の限界と関数型プログラミングの可能性
 
-Presentation slides for developers
+なぜ今Rustが注目されるのか？そしてTypeScriptで関数型プログラミングを実践する方法
 
 <div @click="$slidev.nav.next" class="mt-12 py-1" hover:bg="white op-10">
   Press Space for next page <carbon:arrow-right />
