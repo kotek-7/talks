@@ -3,8 +3,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsx ../../scripts/build.ts /2025/functional-programming/",
+    "build": "slidev build",
     "dev": "slidev --open",
     "export": "slidev export"
+  },
+  "customFields": {
+    "base": "/2025/functional-programming/"
   }
 }
