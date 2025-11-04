@@ -11,6 +11,7 @@
         "prettier": "^3.6.2",
         "prettier-plugin-slidev": "^1.0.5",
         "tsx": "^4.20.6",
+        "unplugin-icons": "^22.5.0",
         "vite-svg-loader": "^5.1.0",
         "vue": "^3.5.22",
         "wrangler": "^4.45.4",
