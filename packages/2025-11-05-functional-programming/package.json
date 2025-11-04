@@ -8,10 +8,10 @@
     "export": "slidev export"
   },
   "dependencies": {
+    "shared": "workspace:shared",
     "@slidev/cli": "^52.6.0",
     "@slidev/theme-default": "latest",
     "@slidev/theme-seriph": "latest",
-    "slidev-theme-penguin": "^2.3.1",
     "vite-svg-loader": "^5.1.0",
     "vue": "^3.5.22"
   }
