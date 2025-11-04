@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsx ./scripts/buildChanged.ts"
+    "build": "tsx ./scripts/buildChanged.ts",
+    "deploy": "wrangler pages deploy dist"
   },
   "workspaces": [
     "packages/*"
