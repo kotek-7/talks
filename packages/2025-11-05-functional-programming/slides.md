@@ -27,8 +27,8 @@ The last comment block of each slide will be treated as slide notes. It will be 
 ---
 layout: presenter
 presenterImage: https://avatars.githubusercontent.com/u/62449493
-twitter: '@kotek__D'
-twitterUrl: https://x.com/kotek__D
+twitter: "@kotek**D"
+twitterUrl: https://x.com/kotek**D
 ---
 
 # 鈴木倖人
@@ -39,8 +39,6 @@ Archaive でフロントエンドエンジニアをしています。
 
 - web が好き
 - <a href="https://github.com/kotek-7" flex items-center w-fit><logos-github-icon mr-1 />kotek-7</a>
-<!--
-
--->
 
 ---
+

@@ -3,16 +3,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "slidev build",
+    "build": "tsx ../../scripts/build.ts /2025/rits-clover-fes/",
     "dev": "slidev --open",
     "export": "slidev export"
   },
-  "dependencies": {
-    "@slidev/cli": "^52.6.0",
-    "@slidev/theme-default": "latest",
-    "@slidev/theme-seriph": "latest",
-    "slidev-theme-penguin": "^2.3.1",
-    "vite-svg-loader": "^5.1.0",
-    "vue": "^3.5.22"
+  "devDependencies": {
+    "slidev-theme-penguin": "^2.3.1"
   }
 }
