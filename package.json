@@ -1,0 +1,12 @@
+{
+  "name": "talks",
+  "module": "index.ts",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {
+    "@iconify-json/logos": "^1.2.10"
+  }
+}
