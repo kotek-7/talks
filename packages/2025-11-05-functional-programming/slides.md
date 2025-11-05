@@ -1,5 +1,5 @@
 ---
-theme: ./slidev-theme-penguin
+theme: ./theme
 colorSchema: dark
 canvasWidth: 980
 title: オブジェクト指向の限界と関数型プログラミングの可能性
@@ -725,7 +725,7 @@ layout: center
 
 <div class="mt-16 text-4xl font-bold text-center" style="line-height: 1.5;"><a href="https://github.com/supermacro/neverthrow">neverthrow</a> という TypeScript ライブラリがあります</div>
 
---- 
+---
 
 <h2>neverthrow を使った TypeScript での Result 型の利用例</h2>
 

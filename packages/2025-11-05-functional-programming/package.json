@@ -7,6 +7,9 @@
     "dev": "slidev --open",
     "export": "slidev export"
   },
+  "devDependencies": {
+    "slidev-theme-penguin": "^2.3.1"
+  },
   "customFields": {
     "base": "/2025/functional-programming/"
   }
