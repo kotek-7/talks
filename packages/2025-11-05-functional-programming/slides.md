@@ -761,3 +761,7 @@ function main() {
 ---
 
 # ご清聴ありがとうございました！
+
+---
+
+<a href="https://github.com/kotek-7/talks">このスライドのリポジトリ</a>
