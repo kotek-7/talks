@@ -3,7 +3,7 @@ title: Can you use CAN?
 transition: slide-left
 layout: intro
 colorSchema: dark
-theme: penguin
+theme: ./theme
 class: text-xl
 ---
 
@@ -12,9 +12,6 @@ class: text-xl
 CAN通信の極意  
 ~DRCで使われるCAN通信技術の紹介~
 
-<!--
-
--->
 ---
 layout: presenter
 presenterImage: https://avatars.githubusercontent.com/u/62449493
@@ -75,7 +72,7 @@ graph TD;
 <!--
 -->
 
---- 
+---
 
 # 目次
 
@@ -465,7 +462,7 @@ layout: center
 
 
 
---- 
+---
 
 #  まとめ
 
