@@ -17,14 +17,22 @@ type DiffResult = {
   deletedPackageJsons: readonly string[];
 };
 
+type BuildPlan = {
+  pkg: PackageInfo;
+  noCache: boolean;
+};
+
 async function main() {
   const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
 
   const allPackages = await discoverPackages();
   const packageInfosByName = new Map(allPackages.map(pkg => [pkg.name, pkg]));
 
-  const defaultTargets = allPackages.filter(pkg => pkg.hasBase).map(pkg => pkg.dir);
-  let targets = defaultTargets;
+  const packagesWithBase = allPackages.filter(pkg => pkg.hasBase);
+  let buildPlans: BuildPlan[] = packagesWithBase.map(pkg => ({
+    pkg,
+    noCache: true,
+  }));
   const distCleanups: string[] = [];
 
   if (isGitHubActions) {
@@ -34,8 +42,9 @@ async function main() {
       const mustRebuildAll = diff.changedFiles.some(isSharedResourcePath);
 
       if (!mustRebuildAll) {
-        const touchedPackages = new Set<string>();
+        const changedPackages = new Set<string>();
         const skippedPackages = new Set<string>();
+
         for (const file of diff.changedFiles) {
           const pkgName = extractPackageName(file);
           if (!pkgName) {
@@ -46,16 +55,10 @@ async function main() {
             continue;
           }
           if (info.hasBase) {
-            touchedPackages.add(pkgName);
+            changedPackages.add(pkgName);
           } else {
             skippedPackages.add(pkgName);
           }
-        }
-
-        if (touchedPackages.size > 0) {
-          targets = [...touchedPackages].map(name => packageInfosByName.get(name)!.dir);
-        } else {
-          targets = [];
         }
 
         if (skippedPackages.size > 0) {
@@ -65,21 +68,37 @@ async function main() {
             ].join(', ')}`,
           );
         }
+
+        buildPlans = packagesWithBase.map(pkg => ({
+          pkg,
+          noCache: changedPackages.has(pkg.name),
+        }));
+      } else {
+        buildPlans = packagesWithBase.map(pkg => ({
+          pkg,
+          noCache: true,
+        }));
       }
 
       const basesForDeletion = await resolveDeletedBases(diff.deletedPackageJsons);
       distCleanups.push(...basesForDeletion);
+    } else {
+      buildPlans = packagesWithBase.map(pkg => ({
+        pkg,
+        noCache: true,
+      }));
     }
   }
 
-  if (targets.length === 0) {
-    console.log('No slide packages require rebuilding. Skipping build step.');
+  if (buildPlans.length === 0) {
+    console.log('No slide packages with customFields.base detected. Skipping build step.');
   } else {
-    console.log(`Building ${targets.length} slide package(s):`);
-    for (const target of targets) {
-      console.log(`  - ${relativeToWorkspace(target)}`);
+    console.log(`Building ${buildPlans.length} slide package(s):`);
+    for (const plan of buildPlans) {
+      const mode = plan.noCache ? 'rebuild' : 'reuse cache';
+      console.log(`  - ${relativeToWorkspace(plan.pkg.dir)} (${mode})`);
     }
-    await runBuildForTargets(targets);
+    await runBuildForTargets(buildPlans);
   }
 
   if (distCleanups.length > 0) {
@@ -294,28 +313,34 @@ function buildOutputDir(base: string) {
 
 /**
  * 指定されたスライドパッケージを順番にビルドする。
- * 入力: パッケージディレクトリ絶対パスの配列。
+ * 入力: パッケージ情報と noCache フラグの配列。
  * 出力: 成功時は void。ビルド失敗時は例外を投げる。
  */
-async function runBuildForTargets(targets: string[]) {
-  for (const target of targets) {
+async function runBuildForTargets(plans: BuildPlan[]) {
+  for (const plan of plans) {
+    const args = ['tsx', 'scripts/build.ts'];
+    if (plan.noCache) {
+      args.push('--no-cache');
+    }
+    args.push(relativeToWorkspace(plan.pkg.dir));
+
     await new Promise<void>((resolvePromise, rejectPromise) => {
-      const child = spawn(
-        'npx',
-        ['tsx', 'scripts/build.ts', relativeToWorkspace(target)],
-        {
-          cwd: workspaceRoot,
-          stdio: 'inherit',
-          env: { ...process.env },
-        },
-      );
+      const child = spawn('npx', args, {
+        cwd: workspaceRoot,
+        stdio: 'inherit',
+        env: { ...process.env },
+      });
 
       child.on('error', rejectPromise);
       child.on('exit', code => {
         if (code === 0) {
           resolvePromise();
         } else {
-          rejectPromise(new Error(`Building ${relativeToWorkspace(target)} failed with ${code}`));
+          rejectPromise(
+            new Error(
+              `Building ${relativeToWorkspace(plan.pkg.dir)} failed with ${code}`,
+            ),
+          );
         }
       });
     });

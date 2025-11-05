@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import { readFile, stat as statFile } from 'fs/promises';
+import { cp as copyDir, mkdir, readFile, rm, stat as statFile } from 'fs/promises';
 import { basename, dirname, join, relative, resolve, sep } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -14,17 +14,32 @@ type SlidevPackageJson = {
 
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
+type BuildOptions = {
+  noCache: boolean;
+};
+
 async function main() {
-  const inputs = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const inputs: string[] = [];
+  let noCache = false;
+
+  for (const arg of args) {
+    if (arg === '--no-cache') {
+      noCache = true;
+      continue;
+    }
+    inputs.push(arg);
+  }
+
   if (!inputs.length) {
-    console.error('Usage: tsx scripts/build.ts <path-to-slide> [...more-paths]');
+    console.error('Usage: tsx scripts/build.ts [--no-cache] <path-to-slide> [...more-paths]');
     process.exitCode = 1;
     return;
   }
 
   for (const input of inputs) {
     try {
-      await handleTarget(input);
+      await handleTarget(input, { noCache });
     } catch (error) {
       process.exitCode = 1;
       if (error instanceof Error) {
@@ -42,7 +57,7 @@ async function main() {
  * 入力: CLI で指定されたパス文字列。
  * 出力: 成功時は何も返さず、エラー時には例外を送出。
  */
-async function handleTarget(input: string) {
+async function handleTarget(input: string, options: BuildOptions) {
   const packageDir = await resolvePackageDir(input);
   const packageJsonPath = join(packageDir, 'package.json');
 
@@ -50,7 +65,27 @@ async function handleTarget(input: string) {
   const base = extractBase(packageJson, packageJsonPath);
   const outDir = buildOutputDir(base);
 
-  console.log(`Building ${packageDir} with base "${base}" -> ${outDir}`);
+  const cacheDir = buildOutputDir(base, 'dist-stale');
+
+  if (options.noCache) {
+    console.log(
+      `Building ${packageDir} with base "${base}" -> ${outDir} (no-cache: rebuild enforced)`,
+    );
+    await runSlidevBuild(packageDir, base, outDir);
+    return;
+  }
+
+  if (await directoryExists(cacheDir)) {
+    console.log(
+      `Restoring ${packageDir} with base "${base}" from cache ${cacheDir} -> ${outDir}`,
+    );
+    await restoreFromCache(cacheDir, outDir);
+    return;
+  }
+
+  console.log(
+    `Cache not found for ${packageDir}. Building with base "${base}" -> ${outDir}`,
+  );
   await runSlidevBuild(packageDir, base, outDir);
 }
 
@@ -127,11 +162,11 @@ function extractBase(pkg: SlidevPackageJson, packageJsonPath: string) {
 }
 
 /**
- * base の URL セグメントを dist 配下の出力パスへ変換する。
- * 入力: `/` で囲まれた base 文字列。
- * 出力: dist 配下の絶対パス。無効なセグメントは例外を送出。
+ * base の URL セグメントを dist 系ディレクトリ配下の出力パスへ変換する。
+ * 入力: `/` で囲まれた base 文字列とルートサブディレクトリ。
+ * 出力: dist または dist-stale 配下の絶対パス。無効なセグメントは例外を送出。
  */
-function buildOutputDir(base: string) {
+function buildOutputDir(base: string, subDir: 'dist' | 'dist-stale' = 'dist') {
   const segments = base.split('/').filter(Boolean);
   if (!segments.length) {
     throw new Error(`customFields.base must include a non-empty path segment: ${base}`);
@@ -140,7 +175,7 @@ function buildOutputDir(base: string) {
   if (segments.some(segment => segment === '.' || segment === '..')) {
     throw new Error(`customFields.base must not contain "." or ".." segments: ${base}`);
   }
-  return resolve(workspaceRoot, 'dist', ...segments);
+  return resolve(workspaceRoot, subDir, ...segments);
 }
 
 /**
@@ -165,6 +200,27 @@ async function runSlidevBuild(cwd: string, base: string, outDir: string) {
       }
     });
   });
+}
+
+/**
+ * キャッシュディレクトリから dist へ内容を再配置する。
+ * 入力: キャッシュ元ディレクトリと出力先ディレクトリ。
+ * 出力: 成功で解決する Promise。失敗時は例外を送出。
+ */
+async function restoreFromCache(cacheDir: string, outDir: string) {
+  await mkdir(dirname(outDir), { recursive: true });
+  await rm(outDir, { recursive: true, force: true });
+  await copyDir(cacheDir, outDir, { recursive: true });
+}
+
+/**
+ * 指定ディレクトリが存在するか判定する。
+ * 入力: 絶対パス。
+ * 出力: ディレクトリが存在すれば true。
+ */
+async function directoryExists(path: string) {
+  const stats = await statFile(path).catch(() => null);
+  return Boolean(stats && stats.isDirectory());
 }
 
 await main();
