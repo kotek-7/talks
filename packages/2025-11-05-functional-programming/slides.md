@@ -719,6 +719,12 @@ fn main() {
 成功・失敗という副作用にともなう効果を型で表すことで、副作用を持つ関数をシグネチャで表すことができる！
 </div>
 
+---
+layout: center
+---
+
+<div class="mt-16 text-4xl font-bold text-center" style="line-height: 1.5;"><a href="https://github.com/supermacro/neverthrow">neverthrow</a> という TypeScript ライブラリがあります</div>
+
 --- 
 
 <h2>neverthrow を使った TypeScript での Result 型の利用例</h2>
@@ -751,3 +757,7 @@ function main() {
 <div class="mt-2 text-center text-2xl font-bold  rounded-lg w-fit mx-auto transition" v-click>
 ポイント: throw でエラーを投げず、Result 型を使ってエラーを返すことで、副作用を明示的に扱うことができる。</div>
 
+
+---
+
+# ご清聴ありがとうございました！
