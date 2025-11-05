@@ -26,5 +26,5 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "exclude": ["dist"]
+  "exclude": ["dist", "dist-stale"]
 }
