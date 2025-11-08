@@ -47,6 +47,8 @@ jobs:
               mkdir -p dist
               touch dist/.gitkeep
               git add dist/.gitkeep
+              git config user.name "github-actions"
+              git config user.email "github-actions@github.com"
               git commit -m "Initialize cache branch"
             )
           fi
