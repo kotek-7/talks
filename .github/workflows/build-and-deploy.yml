@@ -12,11 +12,48 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Prepare cache workspace
+        env:
+          CACHE_BRANCH: cache
+        run: |
+          set -euo pipefail
+
+          CACHE_WORKTREE=".cache/cache-branch"
+          CACHE_DIST=".cache/dist"
+
+          mkdir -p "$CACHE_DIST"
+          git fetch origin "$CACHE_BRANCH" || true
+
+          if [ -d "$CACHE_WORKTREE" ]; then
+            git worktree remove --force "$CACHE_WORKTREE"
+          fi
+
+          if git show-ref --verify --quiet "refs/remotes/origin/$CACHE_BRANCH"; then
+            git worktree add "$CACHE_WORKTREE" "origin/$CACHE_BRANCH"
+          else
+            git worktree add "$CACHE_WORKTREE" HEAD
+            (
+              cd "$CACHE_WORKTREE"
+              git checkout --orphan "$CACHE_BRANCH"
+              git rm -rf . >/dev/null 2>&1 || true
+              mkdir -p dist
+              touch dist/.gitkeep
+              git add dist/.gitkeep
+              git commit -m "Initialize cache branch"
+            )
+          fi
+
+          rsync -a --delete "$CACHE_WORKTREE/dist/" "$CACHE_DIST/"
+          echo "CACHE_WORKTREE=$CACHE_WORKTREE" >> "$GITHUB_ENV"
+          echo "CACHE_BRANCH=$CACHE_BRANCH" >> "$GITHUB_ENV"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -43,6 +80,29 @@ jobs:
 
       - name: Build changed slides
         run: npx tsx scripts/buildChanged.ts
+
+      - name: Persist cache updates
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CACHE_WORKTREE:-}" ]; then
+            echo "CACHE_WORKTREE is not set; skipping cache publish."
+            exit 0
+          fi
+          mkdir -p "$CACHE_WORKTREE/dist"
+          rsync -a --delete ".cache/dist/" "$CACHE_WORKTREE/dist/"
+          cd "$CACHE_WORKTREE"
+          git add dist
+          if git diff --cached --quiet; then
+            echo "No cache changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git commit -m "Update cache for ${GITHUB_SHA}"
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:${CACHE_BRANCH}
 
       - name: Deploy to Cloudflare Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
