@@ -1,7 +1,4 @@
 {
-    "slidev.port": 3030,
-    "vue.server.includeLanguages": [
-        "vue",
-        "markdown"
-    ]
+  "slidev.port": 3030,
+  "vue.server.includeLanguages": ["vue"]
 }
