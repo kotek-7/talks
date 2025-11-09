@@ -37,6 +37,9 @@
     },
     "packages/2025-11-05-functional-programming": {
       "name": "2025-11-05-functional-programming",
+      "devDependencies": {
+        "slidev-theme-penguin": "^2.3.1",
+      },
     },
     "packages/example": {
       "name": "example",

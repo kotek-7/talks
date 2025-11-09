@@ -1,15 +1,17 @@
 import { spawn } from 'child_process';
-import { readdir, readFile, rm } from 'fs/promises';
-import { dirname, join, resolve } from 'path';
+import { mkdir, readdir, readFile, rm, stat as statFile, writeFile } from 'fs/promises';
+import { dirname, join, relative, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const packagesRoot = resolve(workspaceRoot, 'packages');
+const cacheRoot = resolve(workspaceRoot, '.cache', 'dist');
+const distRoot = resolve(workspaceRoot, 'dist');
 
 type PackageInfo = {
   name: string;
   dir: string;
-  hasBase: boolean;
+  base: string | null;
 };
 
 type DiffResult = {
@@ -17,8 +19,10 @@ type DiffResult = {
   deletedPackageJsons: readonly string[];
 };
 
+type SlidePackage = PackageInfo & { base: string };
+
 type BuildPlan = {
-  pkg: PackageInfo;
+  pkg: SlidePackage;
   noCache: boolean;
 };
 
@@ -28,7 +32,9 @@ async function main() {
   const allPackages = await discoverPackages();
   const packageInfosByName = new Map(allPackages.map(pkg => [pkg.name, pkg]));
 
-  const packagesWithBase = allPackages.filter(pkg => pkg.hasBase);
+  const packagesWithBase: SlidePackage[] = allPackages.filter(
+    (pkg): pkg is SlidePackage => typeof pkg.base === 'string',
+  );
   let buildPlans: BuildPlan[] = packagesWithBase.map(pkg => ({
     pkg,
     noCache: true,
@@ -54,7 +60,7 @@ async function main() {
           if (!info) {
             continue;
           }
-          if (info.hasBase) {
+          if (typeof info.base === 'string') {
             changedPackages.add(pkgName);
           } else {
             skippedPackages.add(pkgName);
@@ -92,13 +98,15 @@ async function main() {
 
   if (buildPlans.length === 0) {
     console.log('No slide packages with customFields.base detected. Skipping build step.');
+    await writeRebuiltManifest([]);
   } else {
     console.log(`Building ${buildPlans.length} slide package(s):`);
     for (const plan of buildPlans) {
       const mode = plan.noCache ? 'rebuild' : 'reuse cache';
       console.log(`  - ${relativeToWorkspace(plan.pkg.dir)} (${mode})`);
     }
-    await runBuildForTargets(buildPlans);
+    const rebuiltBases = await runBuildForTargets(buildPlans);
+    await writeRebuiltManifest(rebuiltBases);
   }
 
   if (distCleanups.length > 0) {
@@ -106,6 +114,7 @@ async function main() {
     for (const distPath of distCleanups) {
       console.log(`  - ${relativeToWorkspace(distPath)}`);
       await rm(distPath, { recursive: true, force: true });
+      await removeCacheForDist(distPath);
     }
   }
 }
@@ -113,7 +122,7 @@ async function main() {
 /**
  * packages 配下のスライドを列挙し、customFields.base の有無を判断する。
  * 入力: なし（ファイルシステムから package.json を読み込む）。
- * 出力: name/dir/hasBase を持つパッケージ情報の配列。
+ * 出力: name/dir/base を持つパッケージ情報の配列。
  */
 async function discoverPackages(): Promise<PackageInfo[]> {
   const dirs = await readdir(packagesRoot, { withFileTypes: true }).catch(() => []);
@@ -124,18 +133,20 @@ async function discoverPackages(): Promise<PackageInfo[]> {
     }
     const dir = join(packagesRoot, dirent.name);
     const packageJsonPath = join(dir, 'package.json');
-    let hasBase = false;
+    let base: string | null = null;
     try {
       const raw = await readFile(packageJsonPath, 'utf8');
       const parsed = JSON.parse(raw) as { customFields?: { base?: unknown } };
-      hasBase = typeof parsed.customFields?.base === 'string';
+      if (typeof parsed.customFields?.base === 'string') {
+        base = parsed.customFields.base;
+      }
     } catch {
       // ignore parse errors and treat as missing base
     }
     packages.push({
       name: dirent.name,
       dir,
-      hasBase,
+      base,
     });
   }
   return packages;
@@ -308,7 +319,7 @@ function buildOutputDir(base: string) {
   if (segments.some(segment => segment === '.' || segment === '..')) {
     throw new Error(`customFields.base must not contain "." or ".." segments: ${base}`);
   }
-  return resolve(workspaceRoot, 'dist', ...segments);
+  return resolve(distRoot, ...segments);
 }
 
 /**
@@ -316,10 +327,15 @@ function buildOutputDir(base: string) {
  * 入力: パッケージ情報と noCache フラグの配列。
  * 出力: 成功時は void。ビルド失敗時は例外を投げる。
  */
-async function runBuildForTargets(plans: BuildPlan[]) {
+async function runBuildForTargets(plans: BuildPlan[]): Promise<string[]> {
+  const rebuilt: string[] = [];
   for (const plan of plans) {
+    const base = plan.pkg.base;
+    const cacheDir = buildCacheDir(base);
+    const shouldBuild = plan.noCache || !(await directoryExists(cacheDir));
+
     const args = ['tsx', 'scripts/build.ts'];
-    if (plan.noCache) {
+    if (shouldBuild) {
       args.push('--no-cache');
     }
     args.push(relativeToWorkspace(plan.pkg.dir));
@@ -337,14 +353,17 @@ async function runBuildForTargets(plans: BuildPlan[]) {
           resolvePromise();
         } else {
           rejectPromise(
-            new Error(
-              `Building ${relativeToWorkspace(plan.pkg.dir)} failed with ${code}`,
-            ),
+            new Error(`Building ${relativeToWorkspace(plan.pkg.dir)} failed with ${code}`),
           );
         }
       });
     });
+
+    if (shouldBuild) {
+      rebuilt.push(base);
+    }
   }
+  return rebuilt;
 }
 
 /**
@@ -415,6 +434,31 @@ function relativeToWorkspace(targetPath: string) {
   return targetPath.startsWith(workspaceRoot)
     ? targetPath.slice(workspaceRoot.length + 1)
     : targetPath;
+}
+
+function buildCacheDir(base: string) {
+  const segments = base.split('/').filter(Boolean);
+  return resolve(cacheRoot, ...segments);
+}
+
+async function removeCacheForDist(distPath: string) {
+  const relativePath = relative(distRoot, distPath);
+  if (relativePath.startsWith('..')) {
+    return;
+  }
+  const cachePath = resolve(cacheRoot, relativePath);
+  await rm(cachePath, { recursive: true, force: true });
+}
+
+async function directoryExists(path: string) {
+  const stats = await statFile(path).catch(() => null);
+  return Boolean(stats && stats.isDirectory());
+}
+
+async function writeRebuiltManifest(bases: string[]) {
+  await mkdir(distRoot, { recursive: true });
+  const manifestPath = join(distRoot, '.rebuilt.json');
+  await writeFile(manifestPath, JSON.stringify(bases, null, 2));
 }
 
 await main();

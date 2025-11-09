@@ -13,6 +13,8 @@ type SlidevPackageJson = {
 };
 
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const distRoot = resolve(workspaceRoot, 'dist');
+const cacheRoot = resolve(workspaceRoot, '.cache', 'dist');
 
 type BuildOptions = {
   noCache: boolean;
@@ -63,15 +65,15 @@ async function handleTarget(input: string, options: BuildOptions) {
 
   const packageJson = await readSlidevPackage(packageJsonPath);
   const base = extractBase(packageJson, packageJsonPath);
-  const outDir = buildOutputDir(base);
-
-  const cacheDir = buildOutputDir(base, 'dist-stale');
+  const outDir = buildOutputDir(base, distRoot);
+  const cacheDir = buildOutputDir(base, cacheRoot);
 
   if (options.noCache) {
     console.log(
       `Building ${packageDir} with base "${base}" -> ${outDir} (no-cache: rebuild enforced)`,
     );
     await runSlidevBuild(packageDir, base, outDir);
+    await updateCache(outDir, cacheDir);
     return;
   }
 
@@ -87,6 +89,7 @@ async function handleTarget(input: string, options: BuildOptions) {
     `Cache not found for ${packageDir}. Building with base "${base}" -> ${outDir}`,
   );
   await runSlidevBuild(packageDir, base, outDir);
+  await updateCache(outDir, cacheDir);
 }
 
 /**
@@ -163,10 +166,10 @@ function extractBase(pkg: SlidevPackageJson, packageJsonPath: string) {
 
 /**
  * base の URL セグメントを dist 系ディレクトリ配下の出力パスへ変換する。
- * 入力: `/` で囲まれた base 文字列とルートサブディレクトリ。
- * 出力: dist または dist-stale 配下の絶対パス。無効なセグメントは例外を送出。
+ * 入力: `/` で囲まれた base 文字列とルートディレクトリ。
+ * 出力: dist または .cache/dist 配下の絶対パス。無効なセグメントは例外を送出。
  */
-function buildOutputDir(base: string, subDir: 'dist' | 'dist-stale' = 'dist') {
+function buildOutputDir(base: string, rootDir: string) {
   const segments = base.split('/').filter(Boolean);
   if (!segments.length) {
     throw new Error(`customFields.base must include a non-empty path segment: ${base}`);
@@ -175,7 +178,7 @@ function buildOutputDir(base: string, subDir: 'dist' | 'dist-stale' = 'dist') {
   if (segments.some(segment => segment === '.' || segment === '..')) {
     throw new Error(`customFields.base must not contain "." or ".." segments: ${base}`);
   }
-  return resolve(workspaceRoot, subDir, ...segments);
+  return resolve(rootDir, ...segments);
 }
 
 /**
@@ -211,6 +214,17 @@ async function restoreFromCache(cacheDir: string, outDir: string) {
   await mkdir(dirname(outDir), { recursive: true });
   await rm(outDir, { recursive: true, force: true });
   await copyDir(cacheDir, outDir, { recursive: true });
+}
+
+/**
+ * dist でビルドした成果物をキャッシュディレクトリへ保存する。
+ * 入力: dist 内の出力ディレクトリとキャッシュ先ディレクトリ。
+ * 出力: 成功で解決する Promise。失敗時は例外を送出。
+ */
+async function updateCache(outDir: string, cacheDir: string) {
+  await mkdir(dirname(cacheDir), { recursive: true });
+  await rm(cacheDir, { recursive: true, force: true });
+  await copyDir(outDir, cacheDir, { recursive: true });
 }
 
 /**

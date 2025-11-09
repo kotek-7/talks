@@ -53,6 +53,7 @@ jobs:
             )
           fi
 
+          mkdir -p "$CACHE_WORKTREE/dist"
           rsync -a --delete "$CACHE_WORKTREE/dist/" "$CACHE_DIST/"
           echo "CACHE_WORKTREE=$CACHE_WORKTREE" >> "$GITHUB_ENV"
           echo "CACHE_BRANCH=$CACHE_BRANCH" >> "$GITHUB_ENV"
