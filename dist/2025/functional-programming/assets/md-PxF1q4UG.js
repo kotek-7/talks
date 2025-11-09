@@ -1,0 +1,32 @@
+import{_ as y}from"./slidev/CodeBlockWrapper.vue_vue_type_script_setup_true_lang-CuRS4Qk9.js";import{aN as m,b as d,o as n,w as a,g as s,al as t,f as r,e as f,m as g,aa as l,v as u,x as C,T as F}from"./modules/vue-mFB00wk0.js";import{_ as A}from"./default-DPjeGolu.js";import{u as w,f as B}from"./slidev/context-8xistFlA.js";import"./modules/unplugin-icons-COrG_bw-.js";import"./index-D8RyROyf.js";import"./modules/shiki-B2S386Cn.js";import"./slidev/TitleIcon.vue_vue_type_script_setup_true_lang-DL8zSc4Z.js";import"./CornerCurves.vue_vue_type_script_setup_true_lang-BtscQUov.js";const v={class:"flex gap-8 justify-center"},_={class:"mt-4 overflow-y-auto h-100 flex-2"},b={class:"mt-40 text-center bg-white/80 text-xl flex-1 text-black py-4 px-8 rounded-lg transition h-fit"},T={__name:"slides.md__slidev_14",setup(x){const{$clicksContext:p,$frontmatter:c}=w();return p.setup(),(h,o)=>{const i=y,e=m("click");return n(),d(A,u(C(F(B)(F(c),13))),{default:a(()=>[o[2]||(o[2]=s("h2",null,"オブジェクト指向プログラミングのジレンマ",-1)),o[3]||(o[3]=s("div",{"text-xl":"","mt-4":""}," 一方で、具体的なクラスを完全に排除して、インスタンス化を一切行わない究極のコードは… ",-1)),s("div",v,[t((n(),r("div",_,[f(i,g({},{title:"app.java",ranges:[]}),{default:a(()=>[...o[0]||(o[0]=[s("pre",{class:"shiki theme-penguin slidev-code",style:{"background-color":"#282A36",color:"#F8F8F2"}},[s("code",{class:"language-java"},[s("span",{class:"line"},[s("span",{style:{color:"#FF79C6"}},"import"),s("span",{style:{color:"#F8F8F2"}}," database.DatabaseImpl;")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6"}},"import"),s("span",{style:{color:"#F8F8F2"}}," email.EmailServiceImpl;")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#6272A4"}},"// ...")]),l(`
+`),s("span",{class:"line"}),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6"}},"class"),s("span",{style:{color:"#8BE9FD"}}," App"),s("span",{style:{color:"#F8F8F2"}}," {")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#6272A4"}},"  // プロジェクトのエントリーポイント")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#8BE9FD","font-style":"italic"}},"  void"),s("span",{style:{color:"#50FA7B"}}," run"),s("span",{style:{color:"#F8F8F2"}},"() {")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#50FA7B"}},"    startService"),s("span",{style:{color:"#F8F8F2"}},"(")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6","font-weight":"bold"}},"      new"),s("span",{style:{color:"#50FA7B"}}," UserService"),s("span",{style:{color:"#F8F8F2"}},"(")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6","font-weight":"bold"}},"        new"),s("span",{style:{color:"#50FA7B"}}," DatabaseImpl"),s("span",{style:{color:"#F8F8F2"}},"(")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6","font-weight":"bold"}},"          new"),s("span",{style:{color:"#50FA7B"}}," QueryBuilder"),s("span",{style:{color:"#F8F8F2"}},"(")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"            Configuration."),s("span",{style:{color:"#50FA7B"}},"getDbConfig"),s("span",{style:{color:"#F8F8F2"}},"("),s("span",{style:{color:"#E9F284"}},'"'),s("span",{style:{color:"#F1FA8C"}},"primary"),s("span",{style:{color:"#E9F284"}},'"'),s("span",{style:{color:"#F8F8F2"}},", Environment."),s("span",{style:{color:"#50FA7B"}},"getCurrent"),s("span",{style:{color:"#F8F8F2"}},"())")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"          ),")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6","font-weight":"bold"}},"          new"),s("span",{style:{color:"#50FA7B"}}," ConnectionPool"),s("span",{style:{color:"#F8F8F2"}},"()")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#6272A4"}},"          // ...")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"        ),")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6","font-weight":"bold"}},"        new"),s("span",{style:{color:"#50FA7B"}}," AuthService"),s("span",{style:{color:"#F8F8F2"}},"(")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6","font-weight":"bold"}},"          new"),s("span",{style:{color:"#50FA7B"}}," UserRepository"),s("span",{style:{color:"#F8F8F2"}},"(")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6","font-weight":"bold"}},"            new"),s("span",{style:{color:"#50FA7B"}}," DatabaseImpl"),s("span",{style:{color:"#F8F8F2"}},"(")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6","font-weight":"bold"}},"              new"),s("span",{style:{color:"#50FA7B"}}," QueryBuilder"),s("span",{style:{color:"#F8F8F2"}},"(")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"                Configuration."),s("span",{style:{color:"#50FA7B"}},"getDbConfig"),s("span",{style:{color:"#F8F8F2"}},"("),s("span",{style:{color:"#E9F284"}},'"'),s("span",{style:{color:"#F1FA8C"}},"primary"),s("span",{style:{color:"#E9F284"}},'"'),s("span",{style:{color:"#F8F8F2"}},", Environment."),s("span",{style:{color:"#50FA7B"}},"getCurrent"),s("span",{style:{color:"#F8F8F2"}},"())")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"              ),")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#FF79C6","font-weight":"bold"}},"              new"),s("span",{style:{color:"#50FA7B"}}," ConnectionPool"),s("span",{style:{color:"#F8F8F2"}},"()")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#6272A4"}},"              // ...")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"            )")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"          )")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"        new EmailServiceImpl()")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#6272A4"}},"        // ...")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"      )")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"    );")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"  }")]),l(`
+`),s("span",{class:"line"},[s("span",{style:{color:"#F8F8F2"}},"}")])])],-1)])]),_:1},16)])),[[e]]),t((n(),r("div",b,[...o[1]||(o[1]=[l(" すべてのインスタンス化がルートに集約されてしまい、コードの可読性と保守性が著しく低下 😢 ",-1)])])),[[e]])])]),_:1},16)}}};export{T as default};

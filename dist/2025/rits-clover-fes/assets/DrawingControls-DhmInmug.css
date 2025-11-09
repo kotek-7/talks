@@ -1,0 +1,1 @@
+.v-popper--theme-menu .v-popper__arrow-inner{border-color:color-mix(in srgb,var(--colors-gray-DEFAULT) 20%,transparent)}@supports (color: color-mix(in lab,red,red)){.v-popper--theme-menu .v-popper__arrow-inner{border-color:color-mix(in oklab,var(--colors-gray-DEFAULT) 20%,transparent)}}@property --un-border-opacity{syntax:"<percentage>";inherits:false;initial-value:100%;}
